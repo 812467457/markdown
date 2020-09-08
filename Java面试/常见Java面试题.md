@@ -1,8 +1,10 @@
-# JavaSE
+# Java常见面试题
 
-## 基础部分
+## JavaSE
 
-### String、StringBuffer、StringBuilder的区别
+### 基础部分
+
+#### String、StringBuffer、StringBuilder的区别
 
 String是使用final修饰的，所以在定义后不可以修改，每次修改都是重新创建一个String对象。
 
@@ -14,7 +16,7 @@ StringBuilder和StringBuffer相同，但是不是线程安全的，相对效率�
 
 
 
-### final关键字怎么用的
+#### final关键字怎么用的
 
 final修饰一个值时，这个值不可以变。
 
@@ -26,9 +28,9 @@ final修饰一个类时，这个类不能被继承。并且final类中的成员�
 
 
 
-## 集合
+### 集合
 
-### HashMap和Hashtable的区别
+#### HashMap和Hashtable的区别
 
 1. HashMap继承于AbstractMap，Hashtable继承于Dictionary，两者都实现了Map接口
 2. HashMap运行Key和Value为null，Hashtable不可以
@@ -36,7 +38,7 @@ final修饰一个类时，这个类不能被继承。并且final类中的成员�
 
 
 
-### 谈谈HashMap的put方法
+#### 谈谈HashMap的put方法
 
 HashMap的初始值是16，加载因子是0.75，并且要求该容量必须是2的整数次幂。
 
@@ -46,7 +48,7 @@ HashMap的初始值是16，加载因子是0.75，并且要求该容量必须是2
 
 
 
-### ArrayList和LinkList的区别
+#### ArrayList和LinkList的区别
 
 ArrayList底层数据结构时数组，LinkList底层数据结构是双向链表。
 
@@ -56,25 +58,203 @@ LinkList的底层数据结构是双向链表，链表没有下标，所以查询
 
 
 
-# JavaWeb
+## JavaWeb
+
+### Servlet生命周期
+
+1. Web容器加载Servlet类并实例化（默认延迟加载一次），可以指定在容器启动时加载`<load-on-startup>1</load-on-startup>`
+2. 运行init()方法初始化
+3. 用户请求servlet，服务器接收到请求后执行service
+4. service运行与请求方式对应的方法
+5. 销毁实例时调用destroy方法
+
+### 转发（forward）和重定向（redirect）的 区别
+
+1. 转发是容器控制跳转，服务器直接访问目标地址即可，不关心地址从哪来，浏览器只用把内容读取出来，所以地址栏不变。
+2. 重定向是服务器收到请求后，返回一个状态码（302）给浏览器，浏览器解析新的的地址进行跳转，地址栏会变。
+3. 转发效率更高，推荐使用转发，但是转发不能访问到其他服务器上，重定向可以。
 
 
 
-# Spring
+### JSP内置对象
+
+| NO   | 内置对象    | 说明                                       |
+| ---- | ----------- | ------------------------------------------ |
+| 1    | pageContext | 页面上下文对象，可以取得任何范围内的参数。 |
+| 2    | request     | 向客户端请求数据                           |
+| 3    | response    | 服务器对客户端的响应，传送数据到客户端。   |
+| 4    | session     | 会话，保存每个用户的信息，跟踪用户的操作   |
+| 5    | application | 应用程序对象，范围是整个应用。             |
+| 6    | config      | Servlet的配置，表示容器的配置信息          |
+| 7    | out         | 对客户端输出数据                           |
+| 8    | page        | JSP实现类的实例                            |
+| 9    | exception   | 反映运行异常                               |
+
+
+
+### Get和Post的区别
+
+1. Get传递参数是在浏览器的地址栏传递，？连接&分割，以key-value形式。Post一般都是使用表单传递，传递到action指向的URL。
+2. Get是不安全的，因为在传送过程中所有的参数都是暴露在浏览器地址栏的。Post相对安全一些，参数放在body里。
+3. Get传输的数据又大小限制，Post没有大小限制，上传文件操作只能使用Post。
+
+
+
+
+
+
+
+## Spring
+
+### 谈谈什么是Spring IOC
+
+IOC（控制反转）是Spring最核心的部分，IOC的前提需要先了解DI（依赖注入）。
+
+在没有使用IOC的代码中，存在一个问题，就是多个类之间的互相依赖User user  = new User();，如果某个底层的类做出改动，则依赖它的所有类都有进行改动，这种行为显然不合理，所以引入了DI的理念，就是把下层类作为参数传给上层类，实现上层类对下层类的控制。使用DI后只需要定义好接口提供给外界调用即可，DI注入包括set注入、接口注入、注解注入、构造器注入。
+
+IOC执行过程：在spring容器启动后，读取bean的配置信息（注解、xml配置、配置类），根据Bean注册表的信息实例化Bean，再将Bean的实例化装入到容器中，提供给应用使用。
+
+Spring IOC的核心接口：
+
+* BeanFatory：
+* Application：
+
+
 
 ### Spring Bean生命周期
 
+1. 实例化Bean对象
+2. 设置Bean的属性
+3. 如果调用了各种Aware接口声明的依赖，就会在Bean初始化的阶段调用对应的方法，如：BeanNameAware，获取Bean的名字。
+4. 如果实现了BeanPostProcessor接口（该接口需要另一个类中实现，并注入到bena容器），则会调用BeanPostProcessor的前置初始化方法postProcessBeforeInitialization
+5. 如果实现了InitializingBean接口，则会调用afterPropertiesSet的后置方法
+6. 调用bean自身的init方法
+7. 调用BeanPostProcessor的postProcessAfterInitialization后置方法。
+8. 销毁，DisposableBean接口的销毁方法，和自身的销毁方法
+
+
+
+### Spring的作用域
+
+1. singleton(单例)：spring默认的作用域，每个IOC容器创建唯一的一个bean实例
+2. prototype(多例)：针对每个getBean请求，容器都会单独创建一个bena实例
+3. request：针对每个HTTP请求容器都会单独创建一个bean实例
+4. session：同一个session范围内使用同一个bean实例
+5. GlobalSession：用于protlet容器，全局的HTTP Session 共享一个bean实例
+
+
+
+### SpringAOP
+
+在不修改原来代码的基础上对其进行增强，用到了单例模式的设计思想。可以把公共代码进行集中处理，减少重复代码。
+
+SpringAOP多用于在日志系统、安全、事务等功能中。
+
+AOP底层基于动态代理技术，JDK动态代理或cglib动态代理操作字节码的技术，运行时动态生成被调用类型的子类，并且实例化对象再返回给响应的代理对象。
+
+AOP包括四种增强机制：
+
+* 前置增强：在进入方法之前执行。
+* 后置增强：在方法return后执行的操作
+* 异常增强：在抛出异常后执行的操作
+* 最终增强：最后一定会执行的操作
+* 环绕增强：集成了以上四种增强。
+
+核心概念：
+
+* Aspect：切面，定义增强方法的代码，将一个普通的类定义为一个增强类
+* Pointcut：切入点，定义连接查询条件，哪些类哪些方法需要增强
+* Advice：指定什么时候做
+
+
+
+### Spring中的设计模式
+
+* 在BeanFatory和Application中使用了工厂模式。
+* 在创建Bean的过程中使用了单例模式和原型模式
+* AOP技术使用了代理模式、装饰着模式、适配器模式。
+* 事件监听使用的是观察者模式。
+
+
+
+### Spring的事务
+
+隔离级别：
+
+1. DEFAULT：使用数据库默认的隔离级别。
+2. READ_UNCOMMITTED：最低 级别，允许看到其他事务未提交的数据，会产生幻读、脏读、不可重复读。
+3. READ_COMMITTED：只能读取已提交的数据，可以防止脏读，会出现幻读和不可重复读。
+4. REPEATABLE_READ：防止脏读、不可重复读，会产生幻读。
+5. SERIALIZABLE：最高级别，事务处理为串行，阻塞的，能避免所有情况。
+
+脏读、幻读、不可重复读的区别：
+
+* 脏读：在一个事务进行更新数据还未提交的时候，另一个事务来读取数据，在第二个事务把数据读取出来后第一个事务回滚了，这时第二个事务读取的数据就是错误的，所谓的脏读。
+* 幻读：好比注册操作，第一个用户注册判断用户名可以用，但是还没提交，这时又来一个用户使用同样的用户名判断同样可以使用，这时只有一个用户可以成功提交，而剩下一个事务明明判断过该用户名可以使用但是提交失败，这就是幻读。
+* 不可重复读：一个事务多次读取数据，在读取数据的同时又来一个事务修改了数据，就会造成第一个读取数据的事务读取的数据不一致的问题，就是不可重复读。
+
+传播机制（Propagation）：
+
+* REQUIRED：支持当前事务，如果当前没有事务就新建一个事务。常用。
+* SUPPORTS：支持当前事务，如果没有事务，就以无事务的方式运行。
+* MANDATORY：支持当前事务，如果没有事务，就抛出异常。
+* NESTED：支持当前事务，如果当前事务存在，则执行一个嵌套事务，如果当前没有事务，就新建一个事务。外层事务回滚连带内存事务。
+* REQUIRED_NEW：新建事务，如果当前存在事务，就挂起当前事务。
+* NOT_SUPPORTED：以非事务方式执行，如果当前存在事务就挂起当前事务。
+* NEVER：以非事务方式执行，如果当前存在事务，就抛出异常。
 
 
 
 
-# Mybatis
+## Mybatis
+
+### Mybatis中#和$的区别
+
+#{}：解析为一个JDBC预编译语句的参数标记符。相当于一个参数占位符？，实际的SQL语句如 `select * from user where name = #{name}`解析为`select * from user where name = ?`，参数是动态传进来的。
+
+${}：是直接把值替换进来，SQL语句如`select * from user where name = ${name}`解析为`select * from user where name = jack`。
+
+总结：预编译的效率更高，SQL可以重复利用，并且能够防止SQL注入，能用预编译就用预编译`#{}`。但是有些特殊情况需要使用`${}`，比如表名、字段名需要动态替换时，就需要用到`${}`，因为预编译会在传进来的参数上加上单引号，表名和字段名不可以加单引号，而$传进来的是什么就是什么。
+
+SQL注入：不使用预编译的情况下,会出现这种情况`select * from user where name = jack and 1 = 1`，这个SQL永远都是true，也就是说可以把所有数据都查询出来，具有安全隐患,如果使用了预编译就会这样`select * from user where name = 'jack and 1 = 1'`，此时会把整个参数当作一个字符串来查询,可以避免SQL注入。
 
 
 
-# SpringMVC
+### Mybatis的缓存
+
+缓存就是把查询出来的结果存储起来，下一次查询就不去查询数据库，而是直接查询缓存。为了提高查询效率，降低数据库压力。
+
+一级缓存：在同一个SqlSessin对象，在参数和SQL完全一样的情况下，只执行一次SQL语句，默认开启，不能关闭。
+
+二级缓存：二级缓存在SqlSessionFacory生命周期中，需要手动开启。
+
+使用场景：在查询操作高，更新频率低的时候，每一次更新操作都会刷新缓存，所以在使用二级缓存机制时尽量减少更新操作。
 
 
 
-# SpringBoot
+## SpringMVC
+
+### 谈谈你对SpringMVC的理解
+
+SpringMVC是一个基于Java实现的轻量级的Web框架。
+
+核心组件：
+
+* DispatcherServlet：前端控制器，所有流程的控制中心，控制其他组件的执行。
+* Handler(Controller)：后端控制器，负责处理请求的控制逻辑。
+* HandlerMapping：映射器对象，用于管理URL与对应的Controller对应的映射。
+* HandlerAdapter：适配器，主要用来处理方法参数、注解、视图解析器等。
+* ViewResolver：视图解析器，解析对应视图关系。
+
+执行流程：
+
+* 请求匹配到前端控制器（DispatcherServlet）的请求路径映射
+* 前端控制器接收到请求后把请求交给处理器映射器（HandlerMapping）
+* HandlerMapping根据用户的请求URL查找匹配该URL的Handler，并返回一个执行链（HandlerExecuttionChain）
+* DispatcherServlet再请求处理器适配器（HandlerAdapter），调用相应的Handler进行处理并返回ModelAndView给DispatcherServlet。
+* DispatcherServlet对View进行渲染，将页面响应给用户
+
+
+
+## SpringBoot
 
