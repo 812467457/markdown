@@ -48,7 +48,7 @@ public class Thread01 {
 ###  2、方式二：实现Runnable接口
 
 * 创建应该实现Runnable接口的类
-* 实现接口中的抽线方法Run()
+* 实现接口中的抽象方法Run()
 
 * 创建这个实现类的对象，作为参数传入Thread类的构造器，作为一个线程
 * start启动线程
