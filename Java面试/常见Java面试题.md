@@ -140,6 +140,25 @@ IO流的四大基类：
 
 
 
+### 反射
+
+#### 类加载的双亲委派机制
+
+* JVM加载Java类的流程如下：
+  * Java源文件 ----> 编译为class文件 ----> 类加载器(ClassLoader)加载class文件 ----> 转换为实例
+
+ClassLoader是如何加载文件的？
+
+根据不同的来源，Java使用不同的加载器来加载
+
+* Java核心类，由BootstrapClassLoader（根加载器）加载，BootstrapClassLoader不继承于Class Loader，是JVM内部实现的，所以通过Java访问不到。
+* Java扩展类，由ExtClassLoader（扩展类加载器）加载
+* 项目中编写的类，由AppClassLoader（系统加载器）加载
+
+双亲委派：就是加载一个类时，会先获取到一个AppClassLoader的实例，然后向上层层请求，先由BootstrapClassLoader加载，如果BootstrapClassLoader没有再去ExtClassLoader查找，如果还是没有就会来到AppClassLoader查找，如果还没有就会报错。
+
+
+
 ### 多线程
 
 #### 创建多线程的方式有几种？
@@ -159,6 +178,61 @@ IO流的四大基类：
 
 
 
+#### sleep和wait的区别
+
+* 类型不同
+  * sleep是定义在Thread类上面
+  * wait是定义在Object类上面
+* 对于资源锁处理不同
+  * sleep不会释放锁
+  * wait会释放锁
+* 使用范围不同
+  * sleep可以使用在任何代码块
+  * wait必须使用在同步代码块
+* 生命周期不同
+  * 当线程调用sleep方法时，会进入到timeed waiting状态，等待计时结束自动放开
+  * 当线程调用wait方法时，会进入到waiting状态，需要调用notify或notifyAll来唤醒线程
+
+
+
+#### 谈谈你对ThreadLocal的理解
+
+ThreadLocal是一个线程变量的工具类，其内部维护着一个map。
+
+> 通过ThreadLocal的get和set方法查看
+
+```Java
+public T get() {
+    Thread t = Thread.currentThread();
+    ThreadLocalMap map = getMap(t);
+    if (map != null) {
+        ThreadLocalMap.Entry e = map.getEntry(this);
+        if (e != null) {
+            @SuppressWarnings("unchecked")
+            T result = (T)e.value;
+            return result;
+        }
+    }
+    return setInitialValue();
+}
+
+public void set(T value) {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        if (map != null)
+            //把当前ThreadLocal当作建，传进来的具体数据当作值存入map
+            map.set(this, value);
+        else
+            createMap(t, value);
+    }
+```
+
+可以看出每一个线程都有一个map对象，map对象保存本地线程对象的副本变量，所以对于不同的线程获取副本的值时，别的线程不能获取当前副本的值，形成了副本隔离，互不干扰。
+
+使用场景有：在获取JDBC连接对象时，如果每个DAO都重新获取一次连接对象，那么在service中的事务控制就不会生效了，因为多个JDBC连接之间没有任何联系，这时使用ThreadLocal来改进，创建一个连接的工具类，使用ThreadLocal保存连接对象，这样其他线程使用连接对象时就保证了使用的是同一个对象，并且不会互相干扰。
+
+
+
 
 
 ## JavaWeb
@@ -166,15 +240,15 @@ IO流的四大基类：
 ### Servlet生命周期
 
 1. Web容器加载Servlet类并实例化（默认延迟加载一次），可以指定在容器启动时加载`<load-on-startup>1</load-on-startup>`
-2. 运行init()方法初始化
+2. 运行init()方法初始化（执行一次）
 3. 用户请求servlet，服务器接收到请求后执行service
-4. service运行与请求方式对应的方法
-5. 销毁实例时调用destroy方法
+4. service运行与请求方式对应的方法（doGet或doPost）
+5. 销毁实例时调用destroy方法（执行一次）
 
 ### 转发（forward）和重定向（redirect）的 区别
 
-1. 转发是容器控制跳转，服务器直接访问目标地址即可，不关心地址从哪来，浏览器只用把内容读取出来，所以地址栏不变。
-2. 重定向是服务器收到请求后，返回一个状态码（302）给浏览器，浏览器解析新的的地址进行跳转，地址栏会变。
+1. 转发是容器控制跳转，浏览器只用把内容读取出来，所以地址栏不变。对于客户端来说始终都是一次请求，所以保存在request的数据可以传递。
+2. 重定向是服务器收到请求后，返回一个状态码（302）给浏览器，浏览器解析新的的地址进行跳转，地址栏会变。对于客户端是两次请求，所以request的数据就不可以传递了，如需数据传递就要使用session对象
 3. 转发效率更高，推荐使用转发，但是转发不能访问到其他服务器上，重定向可以。
 
 
