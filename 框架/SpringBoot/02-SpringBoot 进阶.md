@@ -71,7 +71,7 @@ public Employee getEmployeeById(Integer id){
 
 
 
-### 5、@Cacheable属性
+### 5、@Cacheable的使用
 
 * cacheNames/value：将方法的返回结果放入哪个缓存中，数组的方式，可以指定多个缓存
 
@@ -138,5 +138,142 @@ public Employee getEmployeeById(Integer id){
 
 ### 6、@CachePut的使用
 
-@CachePut：修改了数据库某个数据，同时更新缓存，常用在更新操作。
+@CachePut：修改了数据库某个数据，同时更新缓存，常用在更新操作。同步更新缓存。
+
+> 简单使用
+
+```Java
+@CachePut(value = "emp")
+public Employee updateEmp(Employee employee) {
+    mapper.updateEmployee(employee);
+    System.out.println("执行更新" + employee);
+    return employee;
+}
+```
+
+问题引出：先进行一次查询，把id为1的数据存入缓存，然后再对id为1的emp进行更新操作，再次查询，发现缓存中的数据没有变化。
+
+问题解析：CachePut的确对当前的数据重新缓存了，但是使用的Key不一样，缓存中都是键值对的，而key的默认值就是参数，CachePut和Cacheable的key不相同，所以查询的缓存也不相同。
+
+> 指定Cacheable的key和CachePut一样，key = "#result.id"也可以写成key = "#Employee.id"
+
+```Java
+@Cacheable(cacheNames = "emp")
+public Employee getEmployeeById(Integer id) {
+    System.out.println("执行查询:" + id);
+    return mapper.getEmployee(id);
+}
+
+@CachePut(value = "emp",key = "#result.id")
+public Employee updateEmp(Employee employee) {
+    mapper.updateEmployee(employee);
+    System.out.println("执行更新" + employee);
+    return employee;
+}
+```
+
+CachePut的方法执行完后会向缓存中重新存入数据，下次再次使用Cacheable标注的查询操作，就不用查询数据库了。
+
+**注意：**存和取的key必须一样。
+
+
+
+### 7、@CacheEvict的使用
+
+调用该注解标注的方法，会删除缓存中对应key的数据，下一次再查询就会查询数据库
+
+```Java
+@CacheEvict(value = "emp",key = "#id")
+public void deleteEmp(Integer id){
+    System.out.println("删除操作");
+}
+```
+
+也可以指定所有的缓存，加上`allEntries = true`即可。
+
+还可以设置是否在方法之前执行`beforeInvocation = true`，缓存的清除是否在方法的之前清除，默认false，如果在方法中出错回滚了，没有成功删除，那么缓存也不会被删除。
+
+
+
+### 8、@Caching的使用
+
+Caching内部组合了@Cacheable、@CachePut和@CacheEvict注解，当缓存的规则比较复杂就可以使用@Caching。
+
+```Java
+@Caching(
+        cacheable = {
+                @Cacheable(value = "emp", key = "#name")
+        },
+        put = {
+                @CachePut(value = "emp", key = "#result.id"),
+                @CachePut(value = "emp", key = "#result.email")
+        }
+)
+public Employee getEmpByName(String name) {
+    return mapper.getEmpByName(name);
+}
+```
+
+这个方法中，使用name查询后就会存入缓存，再次使用id查询或Email查询就之间查询缓存，但是再次使用name查询还是会查询数据库，因为put方法一定会执行，在执行后就会刷新缓存。
+
+
+
+### 9、类上的缓存配置@CacheConfig
+
+可以在类上指定缓存的配置，抽取缓存的公共配置。
+
+```Java
+@Service
+@CacheConfig(cacheNames = "emp")
+public class EmployeeService {
+    .....
+}
+```
+
+比如在类上指定缓存的名称，类中的方法就不用一个一个的指定了。
+
+
+
+### 10、Redis缓存
+
+直接引入redis的依赖，启动应用就会默认加载RedisCache缓存组件
+
+注意：Redis存储的对象需要支持序列化，所以在bean对象上实现序列化接口。
+
+RedisManager默认使用的时Json格式进行存储，可以自定义RedisCacheManager的配置
+
+
+
+## 二、SpringBoot与消息
+
+### 1、RabbitMQ
+
+- 简介：RabbitMQ是AMQP（高级消息队列）的开源实现。
+
+- 核心概念：
+  - Message：消息，由消息头和消息体组成，消息是不具名的，消息体是不透明的，消息头是由一系列的可选属性组成。
+
+  - Publicsher：消息生产者，也是一个交换机发送消息的客户端应用程序。
+
+  - Exchange：交换器，用来接收生产者发送的消息并将这些消息路由给服务器的队列。
+
+  - Queue：消息队列，用来保存消息直到发送给消费者。是消息的容器，也是消息的终点。
+
+  - Binding：绑定，用于消息和交换器之间的关联。一个交换器联系多个队列，当交换器收到消息时，根据路由派发的不同的队列。
+
+  - Connection：网络连接，比如一个TCP连接。
+
+  - Channel：信道，多路复用连接中的一条独立的双向数据流通道。
+
+  - Consumer：消费者，用来获取消息的客户端。
+
+  - Virtual Host：虚拟机，表示一批交换机、消息队列相关对象。
+
+  - Broker：表示消息队列服务器的实体。
+
+  - 执行流程
+
+    ![image-20200916220342353](http://picture.youyouluming.cn/image-20200916220342353.png)
+
+### 2、RabbitMQ运行机制
 

@@ -375,7 +375,7 @@ public class SpringbootMybatisXmlApplication {
 
 在主程序上加@EnableTransactionManagement注解
 
-```
+```Java
 @EnableTransactionManagement    //启动声明式事务
 @MapperScan("cn.yylm.springboot.mapper")    //扫描mapper所在的包
 @SpringBootApplication
