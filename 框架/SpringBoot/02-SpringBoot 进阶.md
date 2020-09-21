@@ -277,3 +277,75 @@ RedisManager默认使用的时Json格式进行存储，可以自定义RedisCache
 
 ### 2、RabbitMQ运行机制
 
+Exchange（交换器）分发消息时根据不同的分发策略略有区别，四种类型：direct、fanout、topic、header（不常用）。
+
+* direct Exchange：消息中的路由键如果和Binding中的bindingKey一致，交换器就会把消息发到对应的队列中。是完全匹配、单播模式。点对点通信模型。
+* fanout Exchange：每个分发到fanout类型的交换器都会分到所有绑定的队列上去。fanout类型转发消息是最快的。是广播模式。
+* topic Exchange：可以对路由键做模糊匹配，做选择性的发的某个队列。
+
+
+
+### 
+
+## 三、SpringBoot与安全
+
+使用SpringSecurity做安全控制
+
+#### 1、搭建环境
+
+* 引入依赖
+* 创建SecurityConfig配置类
+* 继承WebSecurityConfigurerAdapter
+* 使用@EnableWebSecurity开启Security。
+
+#### 2、登录
+
+需要在配置类重写对认证控制的方法`configure(AuthenticationManagerBuilder auth)`。
+
+默认登录路径就是/login，如果登录失败的默认路径是/login?error
+
+```Java
+@Override
+protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+    //从内存中查询用户
+    //添加密码的加密方式、用户、密码、角色。
+    auth.inMemoryAuthentication()
+            .passwordEncoder(new BCryptPasswordEncoder())            .withUser("zhangsan").password("$2a$10$.705X4fjdNBFnFkB1T8E5.H5hSejla4u7KyXkcdZIXidyldayG7Eu").roles("VIP1")
+            .and()            .withUser("jack").password("$2a$10$.705X4fjdNBFnFkB1T8E5.H5hSejla4u7KyXkcdZIXidyldayG7Eu").roles("VIP2", "VIP3");
+}
+```
+
+#### 3、授权
+
+在配置类重写`configure(HttpSecurity http)`方法进行权限控制
+
+```Java
+@Override
+protected void configure(HttpSecurity http) throws Exception {
+    //登录功能
+    http.formLogin();
+
+    //定制授权请求规则.添加控制的路径.对该路径的权限管理
+    http.authorizeRequests()
+            .antMatchers("/").permitAll()
+            .antMatchers("/level1/**").hasRole("VIP1")
+            .antMatchers("/level2/**").hasRole("VIP2")
+            .antMatchers("/level3/**").hasRole("VIP3");
+}
+```
+
+#### 4、注销
+
+在`configure(HttpSecurity http)`中添加`http.logout();`，表示开启注销功能。
+
+在页面上增加一个退出的表单，必须使用表单的post提交方式。
+
+```html
+<form method="post" th:action="@{/logout}">
+   <input type="submit" value="logout">
+</form>
+```
+
+默认的注销地址就`/logout`，注销之后会来到默认的页面，也就是之前的登录页面。
+
+可以定制注销的规则，`http.logout().logoutSuccessUrl("/");`，表示注销之后来到首页。
