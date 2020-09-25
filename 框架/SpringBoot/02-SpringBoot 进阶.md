@@ -291,14 +291,14 @@ Exchange（交换器）分发消息时根据不同的分发策略略有区别，
 
 使用SpringSecurity做安全控制
 
-#### 1、搭建环境
+### 1、搭建环境
 
 * 引入依赖
 * 创建SecurityConfig配置类
 * 继承WebSecurityConfigurerAdapter
 * 使用@EnableWebSecurity开启Security。
 
-#### 2、登录
+### 2、登录
 
 需要在配置类重写对认证控制的方法`configure(AuthenticationManagerBuilder auth)`。
 
@@ -315,7 +315,7 @@ protected void configure(AuthenticationManagerBuilder auth) throws Exception {
 }
 ```
 
-#### 3、授权
+### 3、授权
 
 在配置类重写`configure(HttpSecurity http)`方法进行权限控制
 
@@ -334,7 +334,7 @@ protected void configure(HttpSecurity http) throws Exception {
 }
 ```
 
-#### 4、注销
+### 4、注销
 
 在`configure(HttpSecurity http)`中添加`http.logout();`，表示开启注销功能。
 
@@ -349,3 +349,6 @@ protected void configure(HttpSecurity http) throws Exception {
 默认的注销地址就`/logout`，注销之后会来到默认的页面，也就是之前的登录页面。
 
 可以定制注销的规则，`http.logout().logoutSuccessUrl("/");`，表示注销之后来到首页。
+
+
+
