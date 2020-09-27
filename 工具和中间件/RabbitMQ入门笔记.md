@@ -1,4 +1,4 @@
-# RabbitMQ
+# RabbitMQ 基础
 
 ## 一、入门
 
@@ -678,6 +678,24 @@ public class SpringQueueListener implements MessageListener {
     public void onMessage(Message message) {
 
         System.out.println(new String(message.getBody()));
+    }
+}
+```
+
+
+
+> 使用一个测试类运行把配置文件加载进来
+
+```Java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "classpath:spring-rabbitmq-consumer.xml")
+public class ConsumerTest {
+
+    @Test
+    public void test(){
+        while (true) {
+
+        }
     }
 }
 ```
