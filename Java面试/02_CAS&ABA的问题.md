@@ -32,19 +32,33 @@ public class CASDemo {
 
 ### 1、unsafe加自旋锁
 
-CAS源码
+>  CAS源码
 
 ![image-20200820112408447](http://picture.youyouluming.cn/image-20200820112408447.png)
 
-unsafe是CAS的核心类，由于Java方法无法直接访问底层系统，需要通过本地方法（native）来访问，unsafe相当于一个后门，基于该类可以直接操作特定内存数据。unsafe在sun,misc包。
+unsafe是CAS的核心类，由于Java方法无法直接访问底层系统，需要通过本地方法（native）来访问，unsafe相当于一个后门，基于该类可以直接操作特定内存数据。unsafe在sun,misc包，内部方法可以像 C 指针一样直接操作内存。
 
 注意：unsafe类中所有方法都是native修饰的，表示unsafe类中的方法都是操作系统底层资源执行相应任务。
 
-valueOffset表示该变量在内存中的偏移地址，因为unsafe就是根据内存偏移地址获取数据的
+valueOffset 表示该变量在内存中的偏移地址，因为unsafe就是根据内存偏移地址获取数据的
 
 ### 2、从底层看CAS是什么
 
 它是一条cpu并发原语，功能是判断内存某个位置的值是否为预期值，如果是则改为更新值，不是就不做操作，这个过程就是原子性。
+
+原语的执行必须时连续的，在执行过程中不允许被打断，也就是说CAS是一条CPU的原子指令，不会造成数据不一致的问题。
+
+> AtomicInteger的getAndAddInd方法源码
+
+![image-20201008093513283](C:\Users\luming\AppData\Roaming\Typora\typora-user-images\image-20201008093513283.png)
+
+>  unsafe的getAndAddInd方法源码
+
+![image-20201008093232674](C:\Users\luming\AppData\Roaming\Typora\typora-user-images\image-20201008093232674.png)
+
+底层没有使用sync锁，使用循环一直比较。
+
+
 
 
 
